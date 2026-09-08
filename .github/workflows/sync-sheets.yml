@@ -1,0 +1,36 @@
+name: Daily Google Sheets Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Download sheets as CSV
+        env:
+          SHEET_ID: 15aKwZohEpEwa9fOOnrcqZvAQ-JdHrVLcRTKglM2g1EQ
+        run: python scripts/sync-sheets.py
+      
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: sync sheets data - $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            git push
+          fi
